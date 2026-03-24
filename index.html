@@ -147,79 +147,81 @@
     }
 
     async function runScout() {
-        save();
-        const aiKey = document.getElementById('aiKey').value;
-        const sKey = document.getElementById('searchKey').value;
-        const btn = document.getElementById('scanBtn');
+    save();
+    const aiKey = document.getElementById('aiKey').value;
+    const sKey = document.getElementById('searchKey').value;
+    const btn = document.getElementById('scanBtn');
 
-        if (!aiKey || !sKey) return alert("API Settings incomplete.");
+    if (!aiKey || !sKey) return alert("API Settings incomplete.");
+    
+    btn.disabled = true;
+    document.getElementById('results').innerHTML = '<div style="text-align:center; padding: 2rem;">Processing...</div>';
+    
+    try {
+        log("Querying for LIVE briefs (last 7 days only)...");
+        // We add "March 2026" to the query and use the 'week' filter
+        const searchQuery = `current casting calls ${document.getElementById('pAge').value} ${document.getElementById('sKeys').value} Australia March 2026`;
         
-        btn.disabled = true;
-        document.getElementById('results').innerHTML = '<div style="text-align:center; padding: 2rem;">Processing...</div>';
-        
-        try {
-            log("Querying Tavily for live 2026 Australian briefs...");
-            const searchQuery = `Current Australian casting calls ${document.getElementById('pAge').value} ${document.getElementById('sKeys').value} 2026`;
-            
-            const searchResp = await fetch('https://api.tavily.com/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ api_key: sKey, query: searchQuery, search_depth: "advanced", max_results: 5 })
-            });
-            const searchData = await searchResp.json();
-            log(`Found ${searchData.results.length} sources. Feeding to Agent...`);
-
-            const rawContent = searchData.results.map(r => `SOURCE: ${r.url}\nCONTENT: ${r.content}`).join("\n\n");
-
-            const profile = `Name: ${document.getElementById('pName').value}, Age: ${document.getElementById('pAge').value}, Loc: ${document.getElementById('pLoc').value}, Bio: ${document.getElementById('pCredits').value}`;
-            
-            log(`Contacting OpenRouter (${document.getElementById('modelId').value})...`);
-            const results = await callOpenRouter(aiKey, profile, rawContent);
-            renderResults(results);
-            log("Analysis Complete.");
-
-        } catch (e) {
-            log("FATAL ERROR: " + e.message);
-            document.getElementById('results').innerHTML = `<div style="color:red; text-align:center; padding:2rem;">Failed: ${e.message}</div>`;
-        } finally {
-            btn.disabled = false;
-        }
-    }
-
-    async function callOpenRouter(key, profile, content) {
-        const modelId = document.getElementById('modelId').value;
-        const prompt = `You are a top-tier casting director. 
-        TASK: Compare the actor profile [${profile}] to the following live web data: [${content}].
-        CONSTRAINTS: 
-        - Return ONLY raw JSON. No conversational text.
-        - Identify 10 specific roles.
-        - Calculate a matchScore (0-100) based on location and type.
-        - Use a professional, proactive tone in the 'why' section.
-        
-        JSON FORMAT: {"opportunities": [{"title": "", "type": "", "location": "", "matchScore": 0, "link": "", "why": ""}]}`;
-
-        const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${key}`,
-                "Content-Type": "application/json",
-                "HTTP-Referer": window.location.href,
-                "X-Title": "Pro-Cast Scanner"
-            },
-            body: JSON.stringify({
-                "model": modelId,
-                "messages": [{"role": "user", "content": prompt}]
+        const searchResp = await fetch('https://api.tavily.com/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                api_key: sKey, 
+                query: searchQuery, 
+                search_depth: "advanced", 
+                max_results: 5,
+                time_range: "week" // <--- CRITICAL: Kills the ghosts
             })
         });
-
-        const data = await resp.json();
-        if (data.error) throw new Error(data.error.message);
+        const searchData = await searchResp.json();
         
-        let textResponse = data.choices[0].message.content;
-        const cleanedJson = textResponse.replace(/```json|```/g, '').trim();
-        return JSON.parse(cleanedJson).opportunities;
-    }
+        // Filter out empty or broken search results before sending to AI
+        const validResults = searchData.results.filter(r => r.content && r.content.length > 100);
+        log(`Found ${validResults.length} fresh sources.`);
 
+        const rawContent = validResults.map(r => `URL: ${r.url}\nDATE_FOUND: March 25, 2026\nCONTENT: ${r.content}`).join("\n\n");
+        const profile = `Name: ${document.getElementById('pName').value}, Age: ${document.getElementById('pAge').value}, Loc: ${document.getElementById('pLoc').value}, Bio: ${document.getElementById('pCredits').value}`;
+        
+        log("Analyzing with OpenRouter...");
+        const results = await callOpenRouter(aiKey, profile, rawContent);
+        renderResults(results);
+        log("Scout complete. Check the matches below.");
+
+    } catch (e) {
+        log("ERROR: " + e.message);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function callOpenRouter(key, profile, content) {
+    const prompt = `TODAY'S DATE: March 25, 2026.
+    TASK: Act as a high-end talent agent. Match [${profile}] against these specific web results: [${content}].
+    
+    STRICT RULES:
+    1. DEADLINE CHECK: If a listing has a submission deadline BEFORE March 25, 2026, or mentions 2024/2025 dates, DISCARD IT.
+    2. UNIQUE LINKS: Each of the 5 results MUST have a different URL. Do not repeat links.
+    3. JSON ONLY: Return a raw JSON object: {"opportunities": [...]}`;
+
+    const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${key}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": window.location.href,
+            "X-Title": "Pro-Cast Scout"
+        },
+        body: JSON.stringify({
+            "model": "openrouter/free",
+            "messages": [{"role": "user", "content": prompt}]
+        })
+    });
+
+    const data = await resp.json();
+    let textResponse = data.choices[0].message.content;
+    const cleanedJson = textResponse.replace(/```json|```/g, '').trim();
+    return JSON.parse(cleanedJson).opportunities;
+}
     function renderResults(list) {
         const container = document.getElementById('results');
         container.innerHTML = '';
