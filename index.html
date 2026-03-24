@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro-Cast Scanner | Agentic Scout</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #1a1a18; --paper: #f2ede4; --cream: #e8e1d4; --gold: #c9a84c;
+            --muted: #7a7468; --card-bg: #faf7f2; --glow: #00ff41;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--paper); color: var(--ink); font-family: 'DM Mono', monospace; min-height: 100vh; line-height: 1.4; }
+
+        header { border-bottom: 2px solid var(--ink); padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; background: var(--ink); color: var(--paper); }
+        .logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; }
+        .logo span { color: var(--gold); font-style: italic; }
+        .btn-ghost { background: none; border: 1px solid var(--muted); color: var(--muted); padding: 0.5rem 1rem; cursor: pointer; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        #settingsDrawer { display: none; background: #fff; border-bottom: 2px solid var(--ink); padding: 2rem; }
+        .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
+
+        main { max-width: 1200px; margin: 0 auto; padding: 2rem; display: grid; grid-template-columns: 350px 1fr; gap: 2rem; }
+
+        .sidebar { position: sticky; top: 2rem; background: var(--card-bg); border: 2px solid var(--ink); padding: 1.5rem; height: fit-content; }
+        .sidebar h2 { font-family: 'Playfair Display', serif; font-size: 1.4rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--cream); padding-bottom: 0.5rem; }
+
+        .field { margin-bottom: 1.2rem; }
+        label { display: block; font-size: 0.65rem; text-transform: uppercase; font-weight: bold; margin-bottom: 0.4rem; color: var(--muted); }
+        input, select, textarea { width: 100%; padding: 0.8rem; border: 1px solid var(--ink); background: var(--paper); font-family: 'DM Mono', monospace; font-size: 0.8rem; border-radius: 0; }
+        textarea { resize: vertical; min-height: 100px; }
+
+        .search-controls { background: var(--ink); color: var(--paper); padding: 2rem; margin-bottom: 2rem; border: 2px solid var(--ink); }
+        .btn-prime { background: var(--gold); color: var(--ink); border: none; padding: 1.2rem; width: 100%; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.1em; transition: 0.2s; }
+        .btn-prime:hover { background: #fff; }
+        .btn-prime:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        #console { display: none; background: #000; color: var(--glow); padding: 1rem; font-size: 0.7rem; margin-top: 1.5rem; border-left: 4px solid var(--gold); max-height: 200px; overflow-y: auto; }
+
+        .results-list { display: grid; gap: 1.5rem; }
+        .card { background: #fff; border: 1px solid var(--ink); padding: 1.5rem; position: relative; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .badge { position: absolute; top: 1.5rem; right: 1.5rem; font-weight: bold; color: var(--gold); border: 1px solid var(--gold); padding: 0.2rem 0.5rem; font-size: 0.7rem; }
+        .card-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 0.5rem; padding-right: 4.5rem; }
+        .card-meta { font-size: 0.7rem; color: var(--muted); margin-bottom: 1rem; text-transform: uppercase; }
+        .card-desc { font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.2rem; }
+        .card-link { color: var(--ink); font-weight: bold; text-decoration: underline; font-size: 0.75rem; }
+
+        @media (max-width: 900px) { main { grid-template-columns: 1fr; } .sidebar { position: static; } }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">Pro-Cast <span>Scanner</span></div>
+    <button class="btn-ghost" onclick="toggleSettings()">⚙ API Settings</button>
+</header>
+
+<div id="settingsDrawer">
+    <div class="settings-grid">
+        <div class="field">
+            <label>AI Provider</label>
+            <select id="aiProvider">
+                <option value="openrouter">OpenRouter (Unified)</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>OpenRouter API Key</label>
+            <input type="password" id="aiKey" placeholder="sk-or-v1-...">
+        </div>
+        <div class="field">
+            <label>Tavily Search Key</label>
+            <input type="password" id="searchKey" placeholder="tvly-...">
+        </div>
+        <div class="field">
+            <label>Model ID (Free Only)</label>
+            <input type="text" id="modelId" value="meta-llama/llama-3-8b-instruct:free">
+        </div>
+    </div>
+    <p style="font-size: 0.6rem; color: var(--muted); text-align: center; margin-top: 1rem;">Keys are stored in your browser's LocalStorage only.</p>
+</div>
+
+<main>
+    <aside class="sidebar">
+        <h2>Actor Profile</h2>
+        <div class="field"><label>Full Name</label><input type="text" id="pName" placeholder="Bernard Woodcock"></div>
+        <div class="field"><label>Playing Age & Gender</label><input type="text" id="pAge" placeholder="Male, 50s"></div>
+        <div class="field"><label>Location</label><input type="text" id="pLoc" placeholder="Sydney, Australia"></div>
+        <div class="field"><label>Experience Keywords</label><textarea id="pCredits" placeholder="Actor, Executive Strategy, Tech..."></textarea></div>
+        <div class="field"><label>Proactive Constraints</label><textarea id="pSkills" placeholder="No 'safe pair of hands' phrasing..."></textarea></div>
+    </aside>
+
+    <section>
+        <div class="search-controls">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom: 1.5rem;">
+                <div class="field">
+                    <label style="color:var(--gold)">Target Niche</label>
+                    <input type="text" id="sKeys" placeholder="Dad, Villain, CEO..." style="background:transparent; color:#fff; border-color:var(--muted)">
+                </div>
+                <div class="field">
+                    <label style="color:var(--gold)">Casting Board Scope</label>
+                    <select id="sScope" style="background:transparent; color:#fff; border-color:var(--muted)">
+                        <option value="Australia">Australia Wide</option>
+                        <option value="Global">International</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-prime" id="scanBtn" onclick="runScout()">▶ Initiate Live Scout</button>
+            <div id="console"></div>
+        </div>
+
+        <div id="results" class="results-list">
+            <div style="text-align:center; padding: 4rem; color:var(--muted); font-size:0.8rem;">
+                Enter your profile details and API keys to activate the scanner.
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    const fields = ['aiKey', 'searchKey', 'modelId', 'pName', 'pAge', 'pLoc', 'pCredits', 'pSkills'];
+    
+    window.onload = () => {
+        fields.forEach(f => {
+            const val = localStorage.getItem('procast_' + f);
+            if (val) document.getElementById(f).value = val;
+        });
+    };
+
+    function save() {
+        fields.forEach(f => localStorage.setItem('procast_' + f, document.getElementById(f).value));
+    }
+
+    function toggleSettings() {
+        const d = document.getElementById('settingsDrawer');
+        d.style.display = d.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function log(msg) {
+        const c = document.getElementById('console');
+        c.style.display = 'block';
+        const entry = document.createElement('div');
+        entry.textContent = `> ${new Date().toLocaleTimeString()}: ${msg}`;
+        c.prepend(entry);
+    }
+
+    async function runScout() {
+        save();
+        const aiKey = document.getElementById('aiKey').value;
+        const sKey = document.getElementById('searchKey').value;
+        const btn = document.getElementById('scanBtn');
+
+        if (!aiKey || !sKey) return alert("API Settings incomplete.");
+        
+        btn.disabled = true;
+        document.getElementById('results').innerHTML = '<div style="text-align:center; padding: 2rem;">Processing...</div>';
+        
+        try {
+            log("Querying Tavily for live 2026 Australian briefs...");
+            const searchQuery = `Current Australian casting calls ${document.getElementById('pAge').value} ${document.getElementById('sKeys').value} 2026`;
+            
+            const searchResp = await fetch('https://api.tavily.com/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ api_key: sKey, query: searchQuery, search_depth: "advanced", max_results: 5 })
+            });
+            const searchData = await searchResp.json();
+            log(`Found ${searchData.results.length} sources. Feeding to Agent...`);
+
+            const rawContent = searchData.results.map(r => `SOURCE: ${r.url}\nCONTENT: ${r.content}`).join("\n\n");
+
+            const profile = `Name: ${document.getElementById('pName').value}, Age: ${document.getElementById('pAge').value}, Loc: ${document.getElementById('pLoc').value}, Bio: ${document.getElementById('pCredits').value}`;
+            
+            log(`Contacting OpenRouter (${document.getElementById('modelId').value})...`);
+            const results = await callOpenRouter(aiKey, profile, rawContent);
+            renderResults(results);
+            log("Analysis Complete.");
+
+        } catch (e) {
+            log("FATAL ERROR: " + e.message);
+            document.getElementById('results').innerHTML = `<div style="color:red; text-align:center; padding:2rem;">Failed: ${e.message}</div>`;
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function callOpenRouter(key, profile, content) {
+        const modelId = document.getElementById('modelId').value;
+        const prompt = `You are a top-tier casting director. 
+        TASK: Compare the actor profile [${profile}] to the following live web data: [${content}].
+        CONSTRAINTS: 
+        - Return ONLY raw JSON. No conversational text.
+        - Identify 10 specific roles.
+        - Calculate a matchScore (0-100) based on location and type.
+        - Use a professional, proactive tone in the 'why' section.
+        
+        JSON FORMAT: {"opportunities": [{"title": "", "type": "", "location": "", "matchScore": 0, "link": "", "why": ""}]}`;
+
+        const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${key}`,
+                "Content-Type": "application/json",
+                "HTTP-Referer": window.location.href,
+                "X-Title": "Pro-Cast Scanner"
+            },
+            body: JSON.stringify({
+                "model": modelId,
+                "messages": [{"role": "user", "content": prompt}]
+            })
+        });
+
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error.message);
+        
+        let textResponse = data.choices[0].message.content;
+        const cleanedJson = textResponse.replace(/```json|```/g, '').trim();
+        return JSON.parse(cleanedJson).opportunities;
+    }
+
+    function renderResults(list) {
+        const container = document.getElementById('results');
+        container.innerHTML = '';
+        list.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `
+                <div class="badge">${item.matchScore}% Match</div>
+                <div class="card-title">${item.title}</div>
+                <div class="card-meta">${item.type} • ${item.location}</div>
+                <div class="card-desc">${item.why}</div>
+                <a href="${item.link}" target="_blank" class="card-link">View Listing ↗</a>
+            `;
+            container.appendChild(div);
+        });
+    }
+</script>
+</body>
+</html>
