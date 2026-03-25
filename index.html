@@ -3,201 +3,830 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro-Cast Scanner | Agentic Scout</title>
+    <title>Pro-Cast Scanner</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --ink: #1a1a18; --paper: #f2ede4; --cream: #e8e1d4; --gold: #c9a84c;
-            --muted: #7a7468; --card-bg: #faf7f2; --glow: #00ff41;
+            --ink: #1a1a18;
+            --paper: #f2ede4;
+            --cream: #e8e1d4;
+            --gold: #c9a84c;
+            --gold-dim: #8a6f32;
+            --red: #8b2e2e;
+            --green: #2e6b3e;
+            --muted: #7a7468;
+            --card-bg: #faf7f2;
+            --glow: #00ff41;
+            --white: #ffffff;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--paper); color: var(--ink); font-family: 'DM Mono', monospace; min-height: 100vh; line-height: 1.4; }
 
-        header { border-bottom: 2px solid var(--ink); padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; background: var(--ink); color: var(--paper); }
-        .logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; }
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: 'DM Mono', monospace;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* ── HEADER ── */
+        header {
+            background: var(--ink);
+            color: var(--paper);
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--gold);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
         .logo span { color: var(--gold); font-style: italic; }
-        .btn-ghost { background: none; border: 1px solid var(--muted); color: var(--muted); padding: 0.5rem 1rem; cursor: pointer; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .logo sub { font-size: 0.5rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; vertical-align: middle; margin-left: 0.5rem; font-family: 'DM Mono', monospace; font-style: normal; }
 
-        #settingsDrawer { display: none; background: #fff; border-bottom: 2px solid var(--ink); padding: 2rem; }
-        .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
+        .header-actions { display: flex; gap: 0.75rem; align-items: center; }
 
-        main { max-width: 1200px; margin: 0 auto; padding: 2rem; display: grid; grid-template-columns: 350px 1fr; gap: 2rem; }
+        .btn-ghost {
+            background: none;
+            border: 1px solid var(--muted);
+            color: var(--muted);
+            padding: 0.45rem 0.9rem;
+            cursor: pointer;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-family: 'DM Mono', monospace;
+            transition: all 0.2s;
+        }
 
-        .sidebar { position: sticky; top: 2rem; background: var(--card-bg); border: 2px solid var(--ink); padding: 1.5rem; height: fit-content; }
-        .sidebar h2 { font-family: 'Playfair Display', serif; font-size: 1.4rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--cream); padding-bottom: 0.5rem; }
+        .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
 
-        .field { margin-bottom: 1.2rem; }
-        label { display: block; font-size: 0.65rem; text-transform: uppercase; font-weight: bold; margin-bottom: 0.4rem; color: var(--muted); }
-        input, select, textarea { width: 100%; padding: 0.8rem; border: 1px solid var(--ink); background: var(--paper); font-family: 'DM Mono', monospace; font-size: 0.8rem; border-radius: 0; }
-        
-        .search-controls { background: var(--ink); color: var(--paper); padding: 2rem; margin-bottom: 2rem; border: 2px solid var(--ink); }
-        .btn-prime { background: var(--gold); color: var(--ink); border: none; padding: 1.2rem; width: 100%; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.1em; transition: 0.2s; }
-        .btn-prime:hover { background: #fff; }
-        .btn-prime:disabled { opacity: 0.3; cursor: not-allowed; }
+        /* ── SETTINGS DRAWER ── */
+        #settingsDrawer {
+            display: none;
+            background: #111;
+            border-bottom: 2px solid var(--gold);
+            padding: 1.5rem 2rem;
+        }
 
-        #console { display: none; background: #000; color: var(--glow); padding: 1rem; font-size: 0.7rem; margin-top: 1.5rem; border-left: 4px solid var(--gold); max-height: 200px; overflow-y: auto; }
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.2rem;
+            max-width: 900px;
+        }
 
-        .results-list { display: grid; gap: 1.5rem; }
-        .card { background: #fff; border: 1px solid var(--ink); padding: 1.5rem; position: relative; }
-        .badge { position: absolute; top: 1.5rem; right: 1.5rem; font-weight: bold; color: var(--gold); border: 1px solid var(--gold); padding: 0.2rem 0.5rem; font-size: 0.7rem; }
-        .card-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 0.5rem; padding-right: 4.5rem; }
-        .card-meta { font-size: 0.7rem; color: var(--muted); margin-bottom: 1rem; text-transform: uppercase; }
-        .card-desc { font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.2rem; }
-        .card-link { color: var(--ink); font-weight: bold; text-decoration: underline; font-size: 0.75rem; }
-        .card-link.disabled { color: var(--muted); text-decoration: none; cursor: not-allowed; opacity: 0.5; }
+        .settings-note {
+            font-size: 0.65rem;
+            color: var(--muted);
+            margin-top: 1rem;
+            line-height: 1.7;
+        }
 
-        @media (max-width: 900px) { main { grid-template-columns: 1fr; } .sidebar { position: static; } }
+        .settings-note a { color: var(--gold); }
+
+        /* ── LAYOUT ── */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            position: sticky;
+            top: 80px;
+            background: var(--card-bg);
+            border: 2px solid var(--ink);
+        }
+
+        .sidebar-header {
+            background: var(--ink);
+            color: var(--paper);
+            padding: 1rem 1.5rem;
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header span { font-size: 0.6rem; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; font-family: 'DM Mono', monospace; }
+
+        .sidebar-body { padding: 1.5rem; }
+
+        .field { margin-bottom: 1.1rem; }
+
+        label {
+            display: block;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-weight: 500;
+            margin-bottom: 0.35rem;
+            color: var(--muted);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.65rem 0.8rem;
+            border: 1px solid var(--cream);
+            background: var(--paper);
+            font-family: 'DM Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--ink);
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        textarea { resize: vertical; height: 70px; }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--cream);
+            margin: 1.2rem 0;
+        }
+
+        .section-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--gold);
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        /* ── CONTENT AREA ── */
+        .content { display: flex; flex-direction: column; gap: 1.5rem; }
+
+        /* ── SCAN PANEL ── */
+        .scan-panel {
+            background: var(--ink);
+            border: 2px solid var(--gold);
+            padding: 1.5rem;
+        }
+
+        .scan-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .scan-controls label { color: var(--gold); }
+        .scan-controls input, .scan-controls select {
+            background: #2a2a28;
+            border-color: #444;
+            color: var(--paper);
+        }
+
+        .scan-controls input::placeholder { color: #555; }
+
+        .btn-prime {
+            width: 100%;
+            background: var(--gold);
+            color: var(--ink);
+            border: none;
+            padding: 1rem;
+            cursor: pointer;
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-prime:hover:not(:disabled) { background: #fff; }
+        .btn-prime:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ── PROGRESS ── */
+        .progress-bar {
+            height: 2px;
+            background: #333;
+            margin-top: 1rem;
+            display: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar.active { display: block; }
+
+        .progress-fill {
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: var(--gold);
+            animation: slide 1.2s linear infinite;
+        }
+
+        @keyframes slide { to { left: 100%; } }
+
+        /* ── CONSOLE ── */
+        #console {
+            display: none;
+            background: #000;
+            color: var(--glow);
+            padding: 0.8rem 1rem;
+            font-size: 0.65rem;
+            margin-top: 1rem;
+            border-left: 3px solid var(--gold);
+            max-height: 160px;
+            overflow-y: auto;
+            line-height: 1.8;
+        }
+
+        /* ── STATS BAR ── */
+        .stats-bar {
+            display: none;
+            background: var(--cream);
+            border: 1px solid var(--ink);
+            padding: 0.75rem 1rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat strong { color: var(--gold-dim); display: block; font-size: 1rem; text-transform: none; letter-spacing: 0; }
+
+        /* ── RESULT CARDS ── */
+        .results-grid { display: flex; flex-direction: column; gap: 1px; background: var(--ink); border: 2px solid var(--ink); }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            position: relative;
+            transition: background 0.15s;
+            animation: fadeUp 0.3s ease both;
+        }
+
+        .card:hover { background: var(--white); }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.2;
+            flex: 1;
+        }
+
+        .match-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.3rem 0.6rem;
+            flex-shrink: 0;
+            border: 1px solid;
+        }
+
+        .match-high { color: var(--green); border-color: var(--green); background: #f0fff4; }
+        .match-mid { color: var(--gold-dim); border-color: var(--gold); background: #fffbf0; }
+        .match-low { color: var(--muted); border-color: var(--muted); background: var(--cream); }
+
+        .card-meta {
+            font-size: 0.65rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.8rem;
+            display: flex;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        .card-meta-item strong { color: var(--ink); display: inline; text-transform: none; letter-spacing: 0; }
+
+        .card-desc {
+            font-size: 0.8rem;
+            line-height: 1.7;
+            color: #3a3830;
+            margin-bottom: 1rem;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 0.8rem;
+            border-top: 1px solid var(--cream);
+            gap: 1rem;
+        }
+
+        .card-deadline {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+        }
+
+        .card-deadline.urgent { color: var(--red); font-weight: 700; }
+
+        .card-link {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-decoration: none;
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--ink);
+            color: var(--ink);
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .card-link:hover { background: var(--ink); color: var(--gold); }
+        .card-link.no-link { color: var(--muted); border-color: var(--cream); cursor: not-allowed; pointer-events: none; }
+
+        /* ── EMPTY / ERROR STATES ── */
+        .state-box {
+            text-align: center;
+            padding: 4rem 2rem;
+            border: 2px dashed var(--cream);
+            color: var(--muted);
+        }
+
+        .state-box .icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.4; }
+        .state-box p { font-size: 0.8rem; line-height: 1.7; }
+        .state-box.error { border-color: var(--red); color: var(--red); }
+
+        /* ── MOBILE ── */
+        @media (max-width: 860px) {
+            main { grid-template-columns: 1fr; padding: 1rem; }
+            .sidebar { position: static; }
+            .scan-controls { grid-template-columns: 1fr; }
+            header { padding: 1rem; }
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">Pro-Cast <span>Scanner</span></div>
-    <button class="btn-ghost" onclick="toggleSettings()">⚙ API Settings</button>
+    <div class="logo">Pro-Cast <span>Scanner</span><sub>v2.1</sub></div>
+    <div class="header-actions">
+        <span style="font-size:0.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em;" id="lastRun"></span>
+        <button class="btn-ghost" onclick="toggleSettings()">⚙ API Keys</button>
+    </div>
 </header>
 
 <div id="settingsDrawer">
     <div class="settings-grid">
-        <div class="field"><label>OpenRouter API Key</label><input type="password" id="aiKey"></div>
-        <div class="field"><label>Tavily Search Key</label><input type="password" id="searchKey"></div>
-        <div class="field"><label>Model ID</label><input type="text" id="modelId" value="openrouter/free"></div>
+        <div class="field">
+            <label style="color:var(--gold)">OpenRouter API Key</label>
+            <input type="password" id="aiKey" placeholder="sk-or-...">
+        </div>
+        <div class="field">
+            <label style="color:var(--gold)">Tavily Search Key</label>
+            <input type="password" id="searchKey" placeholder="tvly-...">
+        </div>
+        <div class="field">
+            <label style="color:var(--gold)">AI Model</label>
+            <select id="modelId">
+                <option value="google/gemma-3-27b-it:free">Gemma 3 27B (Free — Recommended)</option>
+                <option value="mistralai/mistral-7b-instruct:free">Mistral 7B (Free)</option>
+                <option value="meta-llama/llama-3.1-8b-instruct:free">Llama 3.1 8B (Free)</option>
+                <option value="anthropic/claude-3-haiku">Claude 3 Haiku (Paid — Best)</option>
+                <option value="openrouter/auto">Auto (Unpredictable)</option>
+            </select>
+        </div>
     </div>
+    <p class="settings-note">
+        Get free keys: <a href="https://openrouter.ai" target="_blank">openrouter.ai</a> · <a href="https://tavily.com" target="_blank">tavily.com</a> — Keys are saved locally in your browser only.
+    </p>
 </div>
 
 <main>
     <aside class="sidebar">
-        <h2>Actor Profile</h2>
-        <div class="field"><label>Full Name</label><input type="text" id="pName" placeholder="Bernard Woodcock"></div>
-        <div class="field"><label>Playing Age</label><input type="text" id="pAge" placeholder="Male, 40s-50s"></div>
-        <div class="field"><label>Location</label><input type="text" id="pLoc" placeholder="Sydney, Australia"></div>
-        <div class="field"><label>Credits/Keywords</label><textarea id="pCredits" style="width:100%; height:80px;"></textarea></div>
+        <div class="sidebar-header">
+            Actor Profile
+            <span>Saved Locally</span>
+        </div>
+        <div class="sidebar-body">
+            <div class="field">
+                <label>Full Name</label>
+                <input type="text" id="pName" placeholder="Bernard Woodcock">
+            </div>
+            <div class="field">
+                <label>Playing Age / Gender</label>
+                <input type="text" id="pAge" placeholder="Male, 45–58">
+            </div>
+            <div class="field">
+                <label>Base Location</label>
+                <input type="text" id="pLoc" placeholder="Sydney, Australia">
+            </div>
+            <div class="field">
+                <label>Work Rights</label>
+                <input type="text" id="pRights" placeholder="AU, EU, Ireland — not USA">
+            </div>
+            <hr class="divider">
+            <div class="section-label">Credits & Type</div>
+            <div class="field">
+                <label>Key Credits</label>
+                <textarea id="pCredits" placeholder="Superwog (TV), Vibram/Aerogard commercials, multiple short film leads..."></textarea>
+            </div>
+            <div class="field">
+                <label>Actor Type</label>
+                <input type="text" id="pType" placeholder="Character lead, authority figure, commercial">
+            </div>
+            <div class="field">
+                <label>Agent</label>
+                <input type="text" id="pAgent" placeholder="Random Management, Sydney">
+            </div>
+        </div>
     </aside>
 
-    <section>
-        <div class="search-controls">
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom: 1.5rem;">
-                <div class="field"><label style="color:var(--gold)">Niche</label><input type="text" id="sKeys" placeholder="Dad, CEO, Villain"></div>
-                <div class="field"><label style="color:var(--gold)">Location Scope</label><input type="text" id="sLoc" value="Australia"></div>
+    <section class="content">
+
+        <div class="scan-panel">
+            <div class="scan-controls">
+                <div class="field">
+                    <label>Role Niche / Character Type</label>
+                    <input type="text" id="sKeys" placeholder="father, CEO, detective, villain...">
+                </div>
+                <div class="field">
+                    <label>Production Type</label>
+                    <select id="sProdType" style="background:#2a2a28; border-color:#444; color:var(--paper); font-family:'DM Mono',monospace; font-size:0.78rem; width:100%; padding:0.65rem 0.8rem;">
+                        <option value="any role">Any Type</option>
+                        <option value="vertical drama micro drama">Vertical / Micro Drama</option>
+                        <option value="feature film">Feature Film</option>
+                        <option value="television TV series">TV Series / Streaming</option>
+                        <option value="theatre stage">Theatre</option>
+                        <option value="commercial TVC advertisement">Commercial / TVC</option>
+                        <option value="short film">Short Film</option>
+                        <option value="corporate video">Corporate / Industrial</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Location Scope</label>
+                    <input type="text" id="sLoc" placeholder="Australia, UK, Canada, Europe">
+                </div>
+                <div class="field">
+                    <label>Pay Requirement</label>
+                    <select id="sPay" style="background:#2a2a28; border-color:#444; color:var(--paper); font-family:'DM Mono',monospace; font-size:0.78rem; width:100%; padding:0.65rem 0.8rem;">
+                        <option value="paid">Paid roles only</option>
+                        <option value="any pay including deferred">Any pay incl. deferred</option>
+                        <option value="MEAA minimum rates">MEAA rates minimum</option>
+                    </select>
+                </div>
             </div>
             <button class="btn-prime" id="scanBtn" onclick="runScout()">▶ Initiate Live Scout</button>
+            <div class="progress-bar" id="progressBar"><div class="progress-fill"></div></div>
             <div id="console"></div>
         </div>
-        <div id="results" class="results-list"></div>
+
+        <div class="stats-bar" id="statsBar">
+            <div class="stat"><strong id="statTotal">—</strong>Roles Found</div>
+            <div class="stat"><strong id="statHigh">—</strong>High Match</div>
+            <div class="stat"><strong id="statSources">—</strong>Sources Scanned</div>
+            <div class="stat"><strong id="statTime">—</strong>Scan Time</div>
+        </div>
+
+        <div id="results">
+            <div class="state-box">
+                <div class="icon">◎</div>
+                <p>Fill in your profile, set your search parameters,<br>and hit <strong>Initiate Live Scout</strong> to find current roles.</p>
+            </div>
+        </div>
+
     </section>
 </main>
 
 <script>
-    const storageFields = ['aiKey', 'searchKey', 'modelId', 'pName', 'pAge', 'pLoc', 'pCredits'];
-    window.onload = () => storageFields.forEach(f => {
-        const val = localStorage.getItem('pc_' + f);
-        if (val) document.getElementById(f).value = val;
-    });
+    // ── STORAGE FIELDS ──
+    const fields = ['aiKey','searchKey','modelId','pName','pAge','pLoc','pRights','pCredits','pType','pAgent'];
 
-    function save() { storageFields.forEach(f => localStorage.setItem('pc_' + f, document.getElementById(f).value)); }
-    function toggleSettings() { const d = document.getElementById('settingsDrawer'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
-    function log(msg) { 
-        const c = document.getElementById('console'); c.style.display = 'block';
-        const e = document.createElement('div'); e.textContent = `> ${new Date().toLocaleTimeString()}: ${msg}`;
-        c.prepend(e);
+    window.onload = () => {
+        fields.forEach(f => {
+            const val = localStorage.getItem('pc2_' + f);
+            if (val && document.getElementById(f)) document.getElementById(f).value = val;
+        });
+        const last = localStorage.getItem('pc2_lastRun');
+        if (last) document.getElementById('lastRun').textContent = 'Last scan: ' + last;
+    };
+
+    function save() {
+        fields.forEach(f => {
+            const el = document.getElementById(f);
+            if (el) localStorage.setItem('pc2_' + f, el.value);
+        });
     }
 
+    function toggleSettings() {
+        const d = document.getElementById('settingsDrawer');
+        d.style.display = d.style.display === 'block' ? 'none' : 'block';
+        if (d.style.display === 'block') save();
+    }
+
+    function log(msg, type = 'info') {
+        const c = document.getElementById('console');
+        c.style.display = 'block';
+        const e = document.createElement('div');
+        const color = type === 'error' ? '#ff4444' : type === 'ok' ? '#00ff41' : '#aaa';
+        e.style.color = color;
+        e.textContent = `> ${new Date().toLocaleTimeString()} — ${msg}`;
+        c.appendChild(e);
+        c.scrollTop = c.scrollHeight;
+    }
+
+    function setProgress(active) {
+        document.getElementById('progressBar').classList.toggle('active', active);
+    }
+
+    // ── MAIN SCOUT FUNCTION ──
     async function runScout() {
         save();
-        const aiKey = document.getElementById('aiKey').value;
-        const sKey = document.getElementById('searchKey').value;
-        if (!aiKey || !sKey) return alert("Keys required.");
+
+        const aiKey = document.getElementById('aiKey').value.trim();
+        const sKey = document.getElementById('searchKey').value.trim();
+
+        if (!aiKey || !sKey) {
+            alert("Please open ⚙ API Keys and enter your OpenRouter and Tavily keys.");
+            return;
+        }
 
         const btn = document.getElementById('scanBtn');
         btn.disabled = true;
-        document.getElementById('results').innerHTML = '<div style="text-align:center; padding: 2rem;">Searching live data...</div>';
+        setProgress(true);
+        document.getElementById('console').innerHTML = '';
+        document.getElementById('console').style.display = 'block';
+        document.getElementById('results').innerHTML = '<div class="state-box"><div class="icon" style="animation: pulse 1s infinite;">◎</div><p>Scanning live sources...</p></div>';
+        document.getElementById('statsBar').style.display = 'none';
+
+        const startTime = Date.now();
 
         try {
-            log("Tavily: Fetching fresh briefs...");
-            const query = `current casting calls ${document.getElementById('pAge').value} ${document.getElementById('sKeys').value} ${document.getElementById('sLoc').value} March 2026`;
-            
-            const sResp = await fetch('https://api.tavily.com/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    api_key: sKey, query: query, search_depth: "advanced", 
-                    max_results: 5, time_range: "week" 
-                })
-            });
-            const sData = await sResp.json();
-            
-            // Map data and check if content exists
-            const raw = sData.results.map(r => `SOURCE_URL: ${r.url}\nCONTENT: ${r.content}`).join("\n\n");
-            const profile = `${document.getElementById('pName').value}, ${document.getElementById('pAge').value}, ${document.getElementById('pLoc').value}. Exp: ${document.getElementById('pCredits').value}`;
+            // Build actor profile string
+            const profile = [
+                `Name: ${document.getElementById('pName').value || 'Actor'}`,
+                `Playing Age: ${document.getElementById('pAge').value}`,
+                `Location: ${document.getElementById('pLoc').value}`,
+                `Work Rights: ${document.getElementById('pRights').value}`,
+                `Credits: ${document.getElementById('pCredits').value}`,
+                `Type: ${document.getElementById('pType').value}`,
+                `Agent: ${document.getElementById('pAgent').value}`
+            ].filter(s => s.split(': ')[1]).join(' | ');
 
-            log("OpenRouter: Extracting verified roles...");
-            const results = await callAI(aiKey, profile, raw);
-            renderResults(results);
-            log("Analysis Complete.");
+            const prodType = document.getElementById('sProdType').value;
+            const niche = document.getElementById('sKeys').value;
+            const locScope = document.getElementById('sLoc').value || 'Australia';
+            const payReq = document.getElementById('sPay').value;
+            const today = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            // ── TWO PARALLEL TAVILY SEARCHES ──
+            log("Launching dual search queries...");
+
+            const query1 = `${prodType} casting call ${niche} male ${document.getElementById('pAge').value} ${locScope} paid ${today}`;
+            const query2 = `${prodType} auditions actors ${locScope} ${niche} ${payReq} 2026`;
+
+            log(`Query A: "${query1.substring(0, 60)}..."`);
+            log(`Query B: "${query2.substring(0, 60)}..."`);
+
+            const [res1, res2] = await Promise.all([
+                tavilySearch(sKey, query1),
+                tavilySearch(sKey, query2)
+            ]);
+
+            // Merge and deduplicate by URL
+            const seen = new Set();
+            const allResults = [...res1, ...res2].filter(r => {
+                if (!r.url || seen.has(r.url)) return false;
+                seen.add(r.url);
+                return r.content && r.content.length > 80;
+            });
+
+            log(`Found ${allResults.length} unique sources across both queries.`, 'ok');
+
+            if (allResults.length === 0) {
+                throw new Error("No results from Tavily. Check your API key or try broader search terms.");
+            }
+
+            // Format raw content for AI
+            const raw = allResults.map((r, i) =>
+                `[SOURCE ${i+1}]\nURL: ${r.url}\nTITLE: ${r.title || ''}\nCONTENT: ${r.content.substring(0, 600)}`
+            ).join("\n\n---\n\n");
+
+            log("Sending to AI for extraction and matching...");
+
+            const opportunities = await callAI(aiKey, profile, raw, today, payReq, locScope);
+
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+            const highCount = opportunities.filter(o => o.matchScore >= 75).length;
+
+            log(`Extraction complete — ${opportunities.length} opportunities matched.`, 'ok');
+
+            // Update stats
+            document.getElementById('statTotal').textContent = opportunities.length;
+            document.getElementById('statHigh').textContent = highCount;
+            document.getElementById('statSources').textContent = allResults.length;
+            document.getElementById('statTime').textContent = elapsed + 's';
+            document.getElementById('statsBar').style.display = 'flex';
+
+            // Save last run time
+            const runTime = new Date().toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            localStorage.setItem('pc2_lastRun', runTime);
+            document.getElementById('lastRun').textContent = 'Last scan: ' + runTime;
+
+            renderResults(opportunities);
+
         } catch (e) {
-            log("ERROR: " + e.message);
-            document.getElementById('results').innerHTML = `<div style="text-align:center; padding: 2rem; color:red;">${e.message}</div>`;
-        } finally { btn.disabled = false; }
+            log("ERROR: " + e.message, 'error');
+            document.getElementById('results').innerHTML = `<div class="state-box error"><div class="icon">⚠</div><p>${e.message}</p></div>`;
+        } finally {
+            btn.disabled = false;
+            setProgress(false);
+        }
     }
 
-    async function callAI(key, profile, raw) {
-        const today = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
-        const prompt = `
-            TODAY: ${today}
-            ACTOR: ${profile}
-            DATA: ${raw}
+    // ── TAVILY SEARCH ──
+    async function tavilySearch(key, query) {
+        const resp = await fetch('https://api.tavily.com/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                api_key: key,
+                query: query,
+                search_depth: "advanced",
+                max_results: 8,
+                time_range: "month"  // month not week — casting calls take time to index
+            })
+        });
+        const data = await resp.json();
+        if (data.error) throw new Error("Tavily: " + data.error);
+        return data.results || [];
+    }
 
-            STRICT EXTRACTION RULES:
-            1. ONLY extract roles where the SOURCE_URL is present in the data.
-            2. If you find a role but no clear URL, use the nearest 'SOURCE_URL' found in the text.
-            3. DISCARD any role with a deadline before ${today}.
-            4. If a URL is missing, return "NO_LINK" in the link field.
+    // ── AI EXTRACTION ──
+    async function callAI(key, profile, raw, today, payReq, locScope) {
+        const systemPrompt = `You are a precise casting data extractor for a professional actor. 
+You extract real, actionable casting opportunities from web search results.
+You ALWAYS return only valid JSON — no markdown, no explanation, no preamble.
+Your response must start with { and end with }.`;
 
-            FORMAT: {"opportunities": [{"title":"", "type":"", "location":"", "matchScore":0, "link":"", "why":""}]}`;
+        const userPrompt = `TODAY'S DATE: ${today}
+
+ACTOR PROFILE: ${profile}
+
+SEARCH RESULTS:
+${raw}
+
+TASK: Extract casting opportunities from the search results above that match this actor's profile.
+
+STRICT RULES:
+1. PAID ONLY: Only include ${payReq} — discard unpaid/expenses-only listings.
+2. LOCATION: Only include roles shooting in ${locScope} or that accept remote self-tape submissions. Exclude USA-only productions.
+3. DEADLINES: Discard any listing with a submission deadline BEFORE ${today}. If deadline is unknown, include it and mark as "Unknown".
+4. REAL LINKS ONLY: Use only URLs that appear in [SOURCE N] blocks above. If no URL available, set link to null.
+5. MATCH SCORE: Rate 0-100 how well this role suits the actor profile above.
+
+Return this exact JSON structure:
+{
+  "opportunities": [
+    {
+      "title": "Production title and role name",
+      "type": "Film | TV | Vertical Drama | Theatre | Commercial | Short Film | Corporate",
+      "location": "City/Country or Remote/Self-tape",
+      "pay": "Rate or description e.g. MEAA rates, $500/day, TBC",
+      "deadline": "Date or Rolling or Unknown",
+      "matchScore": 85,
+      "why": "2-3 sentences on why this suits the actor specifically",
+      "link": "https://... or null"
+    }
+  ]
+}
+
+Return between 3 and 8 opportunities. Quality over quantity — only include genuine matches.`;
 
         const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
-            headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json", "HTTP-Referer": window.location.href, "X-Title": "ProCast" },
+            headers: {
+                "Authorization": `Bearer ${key}`,
+                "Content-Type": "application/json",
+                "HTTP-Referer": window.location.href,
+                "X-Title": "ProCast Scanner v2"
+            },
             body: JSON.stringify({
-                "model": document.getElementById('modelId').value,
-                "messages": [
-                    {"role": "system", "content": "You are a precise JSON extractor. You never return 'undefined' or 'null' for links."},
-                    {"role": "user", "content": prompt}
+                model: document.getElementById('modelId').value,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
                 ],
-                "temperature": 0.1 
+                temperature: 0.1,
+                max_tokens: 2000
             })
         });
 
         const data = await resp.json();
-        if (data.error) throw new Error(data.error.message);
-        
-        const clean = data.choices[0].message.content.replace(/```json|```/g, '').trim();
-        return JSON.parse(clean).opportunities;
+        if (data.error) throw new Error("OpenRouter: " + data.error.message);
+
+        const raw_text = data.choices[0].message.content;
+        const cleaned = raw_text.replace(/```json|```/g, '').trim();
+
+        // Extract JSON object
+        const match = cleaned.match(/\{[\s\S]*\}/);
+        if (!match) throw new Error("AI returned unexpected format. Try a different model in settings.");
+
+        const parsed = JSON.parse(match[0]);
+        if (!parsed.opportunities || !Array.isArray(parsed.opportunities)) {
+            throw new Error("AI returned malformed data. Please try again.");
+        }
+
+        return parsed.opportunities;
     }
 
+    // ── RENDER RESULTS ──
     function renderResults(list) {
         const container = document.getElementById('results');
         container.innerHTML = '';
+
         if (!list || list.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding: 2rem;">No active matches found. Try broadening your Niche keywords.</div>';
+            container.innerHTML = '<div class="state-box"><div class="icon">◌</div><p>No active matches found.<br>Try broadening your niche keywords or location scope.</p></div>';
             return;
         }
-        list.forEach(item => {
-            const hasLink = item.link && item.link !== "undefined" && item.link !== "NO_LINK";
-            const linkText = hasLink ? 'View Listing ↗' : 'Source Link Missing';
-            const linkClass = hasLink ? 'card-link' : 'card-link disabled';
-            const linkAttr = hasLink ? `href="${item.link}" target="_blank"` : `href="#" onclick="return false;"`;
 
-            const d = document.createElement('div');
-            d.className = 'card';
-            d.innerHTML = `
-                <div class="badge">${item.matchScore}% Match</div>
-                <div class="card-title">${item.title}</div>
-                <div class="card-meta">${item.type} • ${item.location}</div>
-                <div class="card-desc">${item.why}</div>
-                <a ${linkAttr} class="${linkClass}">${linkText}</a>`;
-            container.appendChild(d);
+        // Sort by matchScore descending
+        list.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+
+        const grid = document.createElement('div');
+        grid.className = 'results-grid';
+
+        list.forEach((item, i) => {
+            const score = item.matchScore || 0;
+            const badgeClass = score >= 75 ? 'match-high' : score >= 50 ? 'match-mid' : 'match-low';
+
+            const hasLink = item.link && item.link !== 'null' && item.link !== 'undefined' && item.link.startsWith('http');
+
+            const isUrgent = item.deadline && item.deadline !== 'Unknown' && item.deadline !== 'Rolling';
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.animationDelay = `${i * 0.06}s`;
+
+            card.innerHTML = `
+                <div class="card-top">
+                    <div class="card-title">${esc(item.title || 'Untitled Role')}</div>
+                    <div class="match-badge ${badgeClass}">${score}% match</div>
+                </div>
+                <div class="card-meta">
+                    <span class="card-meta-item"><strong>${esc(item.type || 'Role')}</strong></span>
+                    <span class="card-meta-item">📍 <strong>${esc(item.location || 'TBC')}</strong></span>
+                    <span class="card-meta-item">💰 <strong>${esc(item.pay || 'TBC')}</strong></span>
+                </div>
+                <div class="card-desc">${esc(item.why || '')}</div>
+                <div class="card-footer">
+                    <div class="card-deadline ${isUrgent ? 'urgent' : ''}">
+                        ${isUrgent ? '⚡' : '🗓'} Deadline: ${esc(item.deadline || 'Unknown')}
+                    </div>
+                    ${hasLink
+                        ? `<a href="${esc(item.link)}" target="_blank" rel="noopener" class="card-link">View Listing ↗</a>`
+                        : `<span class="card-link no-link">No Direct Link</span>`
+                    }
+                </div>`;
+
+            grid.appendChild(card);
         });
+
+        container.appendChild(grid);
+    }
+
+    function esc(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
     }
 </script>
 </body>
