@@ -172,6 +172,7 @@
             const rawContent = searchData.results.map((r, i) => `[BLOCK ${i+1}]\nSOURCE_URL: ${r.url}\nCONTENT: ${r.content}`).join("\n\n---\n\n");
 
             const profile = `Name: ${document.getElementById('pName').value}, Age: ${document.getElementById('pAge').value}, Loc: ${document.getElementById('pLoc').value}, Bio: ${document.getElementById('pCredits').value}`;
+            const exclusions = document.getElementById('pSkills').value;
             
             log(`Contacting OpenRouter (${document.getElementById('modelId').value})...`);
             const results = await callOpenRouter(aiKey, profile, rawContent);
@@ -188,16 +189,27 @@
 
     async function callOpenRouter(key, profile, content) {
         const modelId = document.getElementById('modelId').value;
-        const prompt = `You are a top-tier casting director.
+        const today = new Date();
+            const twoWeeksAgo = new Date(today - 14 * 24 * 60 * 60 * 1000).toLocaleDateString('en-AU', {day:'numeric', month:'long', year:'numeric'});
+            const todayStr = today.toLocaleDateString('en-AU', {day:'numeric', month:'long', year:'numeric'});
+            const prompt = `You are a top-tier casting director. Today is ${todayStr}.
         TASK: Compare the actor profile [${profile}] to the following live web data: [${content}].
-        CONSTRAINTS:
+        
+        HARD EXCLUSION RULES — silently discard any role that fails any of these, do not include it or mention it:
+        1. GENDER & AGE: Discard any role that does not match the actor's stated gender and age range.
+        2. EXPIRED: Discard any role where the submission deadline has passed before ${todayStr}.
+        3. STALE: Discard any role posted or dated before ${twoWeeksAgo}.
+        4. EXCLUSIONS: Discard any role matching these criteria: [${exclusions}]. If this field is empty, ignore this rule.
+        5. DATE UNKNOWN: If you cannot determine the posting date or deadline, include the role but set deadline to "Date Unknown".
+
+        OUTPUT RULES:
         - Return ONLY raw JSON. No conversational text.
-        - Identify up to 10 specific roles.
-        - Calculate a matchScore (0-100) based on location and type.
-        - Use a professional, proactive tone in the 'why' section.
+        - Return as many genuine matches as found, up to 10. Do not invent roles to fill a quota.
+        - Calculate a matchScore (0-100) based on how well the role suits the actor profile.
+        - Use a professional, proactive tone in the 'why' field.
         - URL RULE: For each opportunity, first look for a specific job posting URL inside the CONTENT of the same [BLOCK N]. If found, use that as the link. If not found, use the SOURCE_URL from that same [BLOCK N]. Never use a URL from a different block. Never invent a URL.
         
-        JSON FORMAT: {"opportunities": [{"title": "", "type": "", "location": "", "matchScore": 0, "link": "", "why": ""}]}`;
+        JSON FORMAT: {"opportunities": [{"title": "", "type": "", "location": "", "matchScore": 0, "link": "", "deadline": "", "why": ""}]}`;
 
         const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
@@ -227,12 +239,13 @@
         list.forEach(item => {
             const div = document.createElement('div');
             div.className = 'card';
+            const hasLink = item.link && item.link !== 'null' && item.link !== 'undefined' && item.link.startsWith('http');
             div.innerHTML = `
                 <div class="badge">${item.matchScore}% Match</div>
                 <div class="card-title">${item.title}</div>
-                <div class="card-meta">${item.type} • ${item.location}</div>
+                <div class="card-meta">${item.type} • ${item.location} • 🗓 ${item.deadline || 'Date Unknown'}</div>
                 <div class="card-desc">${item.why}</div>
-                <a href="${item.link}" target="_blank" class="card-link">View Listing ↗</a>
+                ${hasLink ? `<a href="${item.link}" target="_blank" class="card-link">View Listing ↗</a>` : '<span style="color:var(--muted);font-size:0.75rem;">No direct link</span>'}
             `;
             container.appendChild(div);
         });
