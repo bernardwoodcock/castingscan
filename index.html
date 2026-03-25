@@ -175,7 +175,7 @@
             const exclusions = document.getElementById('pSkills').value;
             
             log(`Contacting OpenRouter (${document.getElementById('modelId').value})...`);
-            const results = await callOpenRouter(aiKey, profile, rawContent);
+            const results = await callOpenRouter(aiKey, profile, rawContent, exclusions);
             renderResults(results);
             log("Analysis Complete.");
 
@@ -187,12 +187,12 @@
         }
     }
 
-    async function callOpenRouter(key, profile, content) {
+    async function callOpenRouter(key, profile, content, exclusions) {
         const modelId = document.getElementById('modelId').value;
         const today = new Date();
-            const twoWeeksAgo = new Date(today - 14 * 24 * 60 * 60 * 1000).toLocaleDateString('en-AU', {day:'numeric', month:'long', year:'numeric'});
-            const todayStr = today.toLocaleDateString('en-AU', {day:'numeric', month:'long', year:'numeric'});
-            const prompt = `You are a top-tier casting director. Today is ${todayStr}.
+        const twoWeeksAgo = new Date(today - 14 * 24 * 60 * 60 * 1000).toLocaleDateString('en-AU', {day:'numeric', month:'long', year:'numeric'});
+        const todayStr = today.toLocaleDateString('en-AU', {day:'numeric', month:'long', year:'numeric'});
+        const prompt = `You are a top-tier casting director. Today is ${todayStr}.
         TASK: Compare the actor profile [${profile}] to the following live web data: [${content}].
         
         HARD EXCLUSION RULES — silently discard any role that fails any of these, do not include it or mention it:
